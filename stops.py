@@ -56,14 +56,42 @@ def mendotran_generate_stops_db(json_data: json):
         create_table_query = '''
         CREATE TABLE IF NOT EXISTS Stops (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
             stop_id INT NOT NULL,
-            location_lat REAL NOT NULL,
-            location_lon REAL NOT NULL,
-            code TEXT
+            coordinate_lat REAL NOT NULL,
+            coordinate_lon REAL NOT NULL,
+            code TEXT,
+            location TEXT
         );
         '''
         cursor.execute(create_table_query)
-        connection.commit()
 
-        stops_list = json_data["search"][0].values()
+        insert_query = '''
+        INSERT INTO Stops
+        (type, stop_id, coordinate_lat, coordinate_lon, code, location)
+        VALUES
+        (?, ?, ?, ?, ?, ?)
+        '''
+
+        stops_list = json_data["search"][0]
         print(stops_list)
+
+        for stop in json_data["search"]:
+            insert_data = [
+                str(stop["type"]),
+                int(stop["stop_id"]),
+                float(stop["coordinates"][0]),
+                float(stop["coordinates"][1]),
+                str(stop["code"]),
+                str(stop["location"]),
+            ]
+            for data in insert_data:
+                print(data)
+            try:
+                cursor.execute(insert_query, insert_data)
+            except sqlite3.OperationalError as e:
+                print(f"Error inserting data: {e}")
+                exit(1)
+            break
+
+        connection.commit()
