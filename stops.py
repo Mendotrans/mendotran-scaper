@@ -1,5 +1,6 @@
 import requests
 import json
+import sqlite3
 
 stops_url = "https://owa.visionblo.com/api/mendoza/search"
 stops_info_url = "https://owa.visionblo.com/api/mendoza/arrivals"
@@ -45,3 +46,24 @@ def mendotran_request_stop_info(stop_id: str):
         return r.json()
     except requests.exceptions.JSONDecodeError:
         print(f"Request error, no json response, http error: {r.status_code}")
+
+
+def mendotran_generate_stops_db(json_data: json):
+    with sqlite3.connect('stops.db') as connection:
+
+        cursor = connection.cursor()
+
+        create_table_query = '''
+        CREATE TABLE IF NOT EXISTS Stops (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stop_id INT NOT NULL,
+            location_lat REAL NOT NULL,
+            location_lon REAL NOT NULL,
+            code TEXT
+        );
+        '''
+        cursor.execute(create_table_query)
+        connection.commit()
+
+        stops_list = json_data["search"][0].values()
+        print(stops_list)

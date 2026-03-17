@@ -6,8 +6,7 @@ import json
 def main():
     #    r = stops.mendotran_request_stop_info(25600)
     r = stops.mendotran_request_stops()
-    json_formatted_str = json.dumps(r, indent=4)
-    print(json_formatted_str)
+    stops.mendotran_generate_stops_db(r)
 
 
 if __name__ == "__main__":
