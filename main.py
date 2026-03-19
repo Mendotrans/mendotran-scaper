@@ -4,11 +4,9 @@ import json
 
 
 def main():
-    #    r = stops.mendotran_request_stop_info(25600)
-    r = stops.mendotran_request_stops()
-    stops.mendotran_generate_db(r)
-    # r = stops.mendotran_request_stop_info(25612)
-    # r = stops.mendotran_request_services()
+    json_services_data = stops.mendotran_request_services()
+    json_stops_data = stops.mendotran_request_stops()
+    r = stops.mendotran_generate_db(json_stops_data, json_services_data)
     r_formated = json.dumps(r, indent=4)
     print(r_formated)
 

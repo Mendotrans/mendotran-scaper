@@ -49,7 +49,7 @@ def mendotran_request_services():
         print(f"Request error, no json response, http error: {r.status_code}")
 
 
-def mendotran_generate_db(json_data: json):
+def mendotran_generate_db(json_stops_data: json, json_services_data: json):
     print("Creating DB")
     with sqlite3.connect('mendotran.db') as connection:
 
@@ -69,7 +69,7 @@ def mendotran_generate_db(json_data: json):
         );
         '''
 
-        create_table_querys["Services"] = '''
+        create_table_querys["services"] = '''
         CREATE TABLE IF NOT EXISTS Services(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             type TEXT NOT NULL,
@@ -82,48 +82,46 @@ def mendotran_generate_db(json_data: json):
         );
         '''
 
-        create_table_querys["Groups"] = '''
+        create_table_querys["groups"] = '''
         CREATE TABLE IF NOT EXISTS Groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            group_id TEXT
+            group_id TEXT,
             name TEXT
         );
         '''
 
         insert_querys = {}
 
-        insert_querys["Stops"] = '''
+        insert_querys["stops"] = '''
         INSERT INTO Stops
         (type, stop_id, coordinate_lat, coordinate_lon, code, location)
         VALUES
         (?, ?, ?, ?, ?, ?)
         '''
 
-        insert_querys["Services"] = '''
+        insert_querys["services"] = '''
         INSERT INTO Services
-        (type, services_id, group_id, code, name, color, mode)
+        (type, service_id, group_id, code, name, color, mode)
         VALUES
         (?, ?, ?, ?, ?, ?, ?)
         '''
 
-        insert_querys["Groups"] = '''
+        insert_querys["groups"] = '''
         INSERT INTO Groups
         (group_id, name)
         VALUES
         (?, ?)
         '''
 
-        for _, query in create_table_querys:
+        for key, query in create_table_querys.items():
             res = cursor.execute(query)
             print(f"Created table: {res.fetchone()}")
-
-        exit(1)
 
         ##################################################################
         ########################### Stops Table ###########################
         ##################################################################
         print("Populating stops table")
-        for stop in json_data["search"]:
+        for stop in json_stops_data["search"]:
             insert_data = [
                 str(stop["type"]),
                 int(stop["stop_id"]),
@@ -132,10 +130,8 @@ def mendotran_generate_db(json_data: json):
                 str(stop["code"]),
                 str(stop["location"]),
             ]
-            for data in insert_data:
-                print(data)
             try:
-                cursor.execute(stops_insert_query, insert_data)
+                cursor.execute(insert_querys["stops"], insert_data)
             except sqlite3.OperationalError as e:
                 print(f"Error inserting data: {e}")
                 exit(1)
@@ -143,20 +139,20 @@ def mendotran_generate_db(json_data: json):
         ##################################################################
         ########################### Services Table ########################
         ##################################################################
+
         print("Populating services table")
-        for stop in json_data["search"]:
+        for stop in json_services_data["search"]:
             insert_data = [
                 str(stop["type"]),
-                int(stop["stop_id"]),
-                float(stop["coordinates"][0]),
-                float(stop["coordinates"][1]),
+                int(stop["service_id"]),
+                int(stop["group_id"]),
                 str(stop["code"]),
-                str(stop["location"]),
+                str(stop["name"]),
+                str(stop["color"]),
+                str(stop["mode"]),
             ]
-            for data in insert_data:
-                print(data)
             try:
-                cursor.execute(stops_insert_query, insert_data)
+                cursor.execute(insert_querys["services"], insert_data)
             except sqlite3.OperationalError as e:
                 print(f"Error inserting data: {e}")
                 exit(1)
@@ -165,19 +161,14 @@ def mendotran_generate_db(json_data: json):
         ########################### Groups Table ##########################
         ##################################################################
         print("Populating groups table")
-        for stop in json_data["search"]:
+        for group, name_dict in json_services_data["groups"].items():
             insert_data = [
-                str(stop["type"]),
-                int(stop["stop_id"]),
-                float(stop["coordinates"][0]),
-                float(stop["coordinates"][1]),
-                str(stop["code"]),
-                str(stop["location"]),
+                str(group),
+                str(name_dict["name"]),
+
             ]
-            for data in insert_data:
-                print(data)
             try:
-                cursor.execute(stops_insert_query, insert_data)
+                cursor.execute(insert_querys["groups"], insert_data)
             except sqlite3.OperationalError as e:
                 print(f"Error inserting data: {e}")
                 exit(1)
