@@ -1,5 +1,6 @@
 # Mendotran requester
 import stops as stops
+import service as service
 import json
 import os
 
@@ -7,6 +8,7 @@ import os
 def main():
     if os.path.isfile("mendotran.db"):
         print("Found DB!")
+        somethingelese()
         exit(0)
 
     print("No DB found!")
@@ -18,7 +20,7 @@ def main():
 
 
 def somethingelese():
-    r = stops.mendotran_request_stops()
+    r = service.mendotran_request_services(380375, True)
     r_formated = json.dumps(r, indent=4)
     print(r_formated)
 
